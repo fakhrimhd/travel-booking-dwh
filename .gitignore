@@ -1,3 +1,35 @@
+# Environment
 .env
-venv
-/logs
+.env.*
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# dbt
+target/
+dbt_packages/
+logs/
+dbt_pactravel/logs/
+dbt_pactravel/target/
+dbt_pactravel/dbt_packages/
+
+# Luigi
+luigi-output/
+
+# Temp files
+temp/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
