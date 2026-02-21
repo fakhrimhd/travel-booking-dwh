@@ -18,7 +18,7 @@ with deduplicated_hotels as (
       partition by hotel_id
       order by hotel_id  -- or use updated_at DESC if available
     ) as rn
-  from {{ ref('stg_hotel') }}
+  from {{ ref('stg_hotels') }}
 ),
 
 final_dim_hotels as (
