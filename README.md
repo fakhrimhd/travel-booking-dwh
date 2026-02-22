@@ -1,4 +1,4 @@
-# Pactravel Data Warehouse
+# Travel Booking Data Warehouse
 
 ELT pipeline for travel booking analytics, transforming raw flight and hotel booking data into a star schema data warehouse, orchestrated with Apache Airflow.
 
@@ -90,7 +90,7 @@ dbt docs serve --port 8081
 ## Project Structure
 
 ```
-dbt-pactravel/
+travel-booking-dwh/
 ├── dags/
 │   └── pactravel_elt.py          # Airflow DAG definition
 ├── dbt_pactravel/
@@ -120,8 +120,8 @@ dbt-pactravel/
 
 ```bash
 # Clone the repository
-git clone https://github.com/fakhrimhd/dbt-pactravel.git
-cd dbt-pactravel
+git clone https://github.com/fakhrimhd/travel-booking-dwh.git
+cd travel-booking-dwh
 
 # Create environment file from template
 cp .env.example .env
