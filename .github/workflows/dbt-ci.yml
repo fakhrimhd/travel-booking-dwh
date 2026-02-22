@@ -38,7 +38,12 @@ jobs:
       - name: Install dbt
         run: |
           pip install --upgrade pip
-          pip install dbt-postgres==1.7.4
+          pip install dbt-postgres==1.10.0
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
 
       - name: Load source data
         env:
