@@ -2,13 +2,116 @@ version: 2
 
 sources:
   - name: dwh_pactravel
+    description: "PacTravel data warehouse - travel booking platform data loaded from operational systems"
     database: dwh_pactravel
     schema: public
     tables:
       - name: flight_bookings
-      - name: airports
-      - name: aircrafts 
-      - name: airlines
-      - name: customers
+        description: "Raw flight booking transactions from the PacTravel booking system"
+        columns:
+          - name: trip_id
+            description: "Unique identifier for the trip/booking"
+          - name: flight_number
+            description: "Airline flight number (e.g., GA123)"
+          - name: departure_date
+            description: "Scheduled departure date"
+          - name: departure_time
+            description: "Scheduled departure time"
+          - name: price
+            description: "Booking price in local currency"
+          - name: travel_class
+            description: "Class of travel (Economy, Business, First)"
+          - name: customer_id
+            description: "Foreign key to customers table"
+          - name: airline_id
+            description: "Foreign key to airlines table"
+          - name: aircraft_id
+            description: "Foreign key to aircrafts table"
+          - name: airport_src
+            description: "Origin airport code"
+          - name: airport_dst
+            description: "Destination airport code"
+
       - name: hotel_bookings
+        description: "Raw hotel booking transactions from the PacTravel booking system"
+        columns:
+          - name: trip_id
+            description: "Unique identifier for the trip/booking"
+          - name: customer_id
+            description: "Foreign key to customers table"
+          - name: hotel_id
+            description: "Foreign key to hotels table"
+          - name: check_in_date
+            description: "Guest check-in date"
+          - name: check_out_date
+            description: "Guest check-out date"
+          - name: price
+            description: "Total booking price in local currency"
+          - name: breakfast_included
+            description: "Whether breakfast is included in the booking"
+
+      - name: customers
+        description: "Customer master data"
+        columns:
+          - name: customer_id
+            description: "Unique customer identifier"
+          - name: first_name
+            description: "Customer first name"
+          - name: family_name
+            description: "Customer family/last name"
+          - name: gender
+            description: "Customer gender"
+          - name: birthdate
+            description: "Customer date of birth"
+
+      - name: airports
+        description: "Airport reference data with location information"
+        columns:
+          - name: airport_id
+            description: "IATA airport code (e.g., CGK, SIN)"
+          - name: airport_name
+            description: "Full airport name"
+          - name: city
+            description: "City where airport is located"
+          - name: country
+            description: "Country where airport is located"
+          - name: latitude
+            description: "Airport latitude coordinate"
+          - name: longitude
+            description: "Airport longitude coordinate"
+
+      - name: airlines
+        description: "Airline reference data"
+        columns:
+          - name: airline_id
+            description: "Unique airline identifier"
+          - name: airline_name
+            description: "Full airline name"
+          - name: iata_code
+            description: "IATA 2-letter airline code"
+
+      - name: aircrafts
+        description: "Aircraft type reference data"
+        columns:
+          - name: aircraft_id
+            description: "Unique aircraft type identifier"
+          - name: aircraft_name
+            description: "Aircraft model name (e.g., Boeing 737-800)"
+          - name: seats
+            description: "Total seat capacity"
+
       - name: hotel
+        description: "Hotel reference data"
+        columns:
+          - name: hotel_id
+            description: "Unique hotel identifier"
+          - name: hotel_name
+            description: "Hotel name"
+          - name: hotel_address
+            description: "Hotel street address"
+          - name: city
+            description: "City where hotel is located"
+          - name: country
+            description: "Country where hotel is located"
+          - name: star_rating
+            description: "Hotel star rating (1-5)"

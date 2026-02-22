@@ -2,10 +2,10 @@ version: 2
 
 models:
   - name: dim_customers
-    description: "Dimension table for customer information"
+    description: "Customer dimension with demographic information. Type 1 SCD - overwrites on change."
     columns:
       - name: sk_customer_id
-        description: "Surrogate key for customer dimension"
+        description: "Surrogate key for customer dimension (MD5 hash of natural key)"
         tests:
           - not_null
           - unique
@@ -14,178 +14,246 @@ models:
         tests:
           - not_null
       - name: customer_first_name
+        description: "Customer's first name"
         tests:
           - not_null
       - name: customer_family_name
+        description: "Customer's family/last name"
         tests:
           - not_null
+      - name: customer_gender
+        description: "Customer gender (M/F/Other)"
+      - name: customer_birthdate
+        description: "Customer date of birth"
+      - name: customer_age
+        description: "Calculated customer age in years"
 
   - name: dim_airlines
-    description: "Dimension table for airline information"
+    description: "Airline dimension containing carrier information"
     columns:
       - name: sk_airline_id
+        description: "Surrogate key for airline dimension"
         tests:
           - not_null
           - unique
       - name: nk_airline_id
+        description: "Natural key from source system"
         tests:
           - not_null
       - name: airline_name
+        description: "Full airline name"
         tests:
           - not_null
+      - name: iata_code
+        description: "IATA 2-letter airline code"
 
   - name: dim_aircrafts
-    description: "Dimension table for aircraft information"
+    description: "Aircraft type dimension with capacity information"
     columns:
       - name: sk_aircraft_id
+        description: "Surrogate key for aircraft dimension"
         tests:
           - not_null
           - unique
       - name: nk_aircraft_id
+        description: "Natural key from source system"
         tests:
           - not_null
+      - name: aircraft_name
+        description: "Aircraft model name (e.g., Boeing 737-800)"
+      - name: seats
+        description: "Total seat capacity of the aircraft"
 
   - name: dim_airports
-    description: "Dimension table for airport information"
+    description: "Airport dimension with geographic information for route analysis"
     columns:
       - name: sk_airport_id
+        description: "Surrogate key for airport dimension"
         tests:
           - not_null
           - unique
       - name: nk_airport_id
+        description: "Natural key (IATA code)"
         tests:
           - not_null
+      - name: airport_name
+        description: "Full airport name"
+      - name: city
+        description: "City where airport is located"
+      - name: country
+        description: "Country where airport is located"
       - name: latitude
+        description: "Geographic latitude for distance calculations"
         tests:
           - not_null
       - name: longitude
+        description: "Geographic longitude for distance calculations"
         tests:
           - not_null
 
   - name: dim_hotels
-    description: "Dimension table for hotel information"
+    description: "Hotel dimension with location and rating information"
     columns:
       - name: sk_hotel_id
+        description: "Surrogate key for hotel dimension"
         tests:
           - not_null
           - unique
       - name: nk_hotel_id
+        description: "Natural key from source system"
         tests:
           - not_null
-
-  - name: dim_date
-    description: "Date dimension table for analytics"
-    columns:
-      - name: date_id
-        description: "Primary key for date dimension"
-        tests:
-          - not_null
-          - unique
-      - name: date_actual
-        tests:
-          - not_null
-          - unique
-
-  - name: dim_time
-    description: "Time dimension table for analytics"
-    columns:
-      - name: time_id
-        tests:
-          - not_null
-          - unique
-      - name: time_actual
-        tests:
-          - not_null
-          - unique
-      - name: day_night
-        tests:
-          - accepted_values:
-              values: ['Day', 'Night']
+      - name: hotel_name
+        description: "Hotel name"
+      - name: hotel_address
+        description: "Street address"
+      - name: city
+        description: "Hotel city"
+      - name: country
+        description: "Hotel country"
+      - name: star_rating
+        description: "Hotel star rating (1-5 stars)"
 
   - name: fct_flight_bookings
-    description: "Fact table for flight bookings"
+    description: |
+      Flight booking fact table - grain is one row per flight booking.
+      
+      **Materialization:** Incremental (merge strategy)
+      **Update frequency:** Daily, looks back 3 days for late-arriving data
+      **Business context:** Core revenue driver, used for route analysis, yield management, and customer segmentation
     columns:
       - name: sk_flight_booking_id
+        description: "Surrogate key for flight booking (deduplication key)"
         tests:
           - not_null
           - unique
       - name: sk_customer_id
+        description: "Foreign key to dim_customers"
         tests:
           - not_null
           - relationships:
               to: ref('dim_customers')
               field: sk_customer_id
       - name: sk_airline_id
+        description: "Foreign key to dim_airlines"
         tests:
           - not_null
           - relationships:
               to: ref('dim_airlines')
               field: sk_airline_id
       - name: sk_aircraft_id
+        description: "Foreign key to dim_aircrafts"
         tests:
           - relationships:
               to: ref('dim_aircrafts')
               field: sk_aircraft_id
       - name: sk_airport_src_id
+        description: "Foreign key to dim_airports (origin)"
         tests:
           - not_null
           - relationships:
               to: ref('dim_airports')
               field: sk_airport_id
       - name: sk_airport_dst_id
+        description: "Foreign key to dim_airports (destination)"
         tests:
           - not_null
           - relationships:
               to: ref('dim_airports')
               field: sk_airport_id
-      - name: price
-        tests:
-          - not_null
       - name: date_id
+        description: "Foreign key to dim_date (departure date)"
         tests:
           - not_null
           - relationships:
               to: ref('dim_date')
               field: date_id
       - name: time_id
+        description: "Foreign key to dim_time (departure time)"
         tests:
           - relationships:
               to: ref('dim_time')
               field: time_id
+      - name: nk_trip_id
+        description: "Natural key trip identifier from source"
+      - name: flight_number
+        description: "Airline flight number"
+      - name: seat_number
+        description: "Assigned seat number"
+      - name: departure_date
+        description: "Flight departure date"
+      - name: departure_time
+        description: "Flight departure time"
+      - name: flight_duration
+        description: "Flight duration in minutes"
+      - name: travel_class
+        description: "Travel class (Economy, Business, First)"
+      - name: price
+        description: "Booking price in local currency - primary revenue metric"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Record creation timestamp in data warehouse"
+      - name: updated_at
+        description: "Record last update timestamp"
 
   - name: fct_hotel_bookings
-    description: "Fact table for hotel bookings"
+    description: |
+      Hotel booking fact table - grain is one row per hotel booking.
+      
+      **Materialization:** Incremental (merge strategy)
+      **Update frequency:** Daily, looks back 3 days for late-arriving data
+      **Business context:** Accommodation revenue, used for occupancy analysis and package bundling
     columns:
       - name: sk_hotel_booking_id
+        description: "Surrogate key for hotel booking (deduplication key)"
         tests:
           - not_null
           - unique
       - name: sk_customer_id
+        description: "Foreign key to dim_customers"
         tests:
           - not_null
           - relationships:
               to: ref('dim_customers')
               field: sk_customer_id
       - name: sk_hotel_id
+        description: "Foreign key to dim_hotels"
         tests:
           - not_null
           - relationships:
               to: ref('dim_hotels')
               field: sk_hotel_id
       - name: check_in_date_id
+        description: "Foreign key to dim_date (check-in)"
         tests:
           - not_null
           - relationships:
               to: ref('dim_date')
               field: date_id
       - name: check_out_date_id
+        description: "Foreign key to dim_date (check-out)"
         tests:
           - relationships:
               to: ref('dim_date')
               field: date_id
+      - name: nk_trip_id
+        description: "Natural key trip identifier from source"
+      - name: check_in_date
+        description: "Guest check-in date"
+      - name: check_out_date
+        description: "Guest check-out date"
       - name: duration_nights
+        description: "Length of stay in nights"
         tests:
           - not_null
       - name: price
+        description: "Total booking price in local currency"
         tests:
           - not_null
+      - name: breakfast_included
+        description: "Whether breakfast is included (boolean)"
+      - name: created_at
+        description: "Record creation timestamp in data warehouse"
+      - name: updated_at
+        description: "Record last update timestamp"

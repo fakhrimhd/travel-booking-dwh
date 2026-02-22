@@ -1,6 +1,9 @@
 {{
   config(
-    unique_key='sk_hotel_booking_id'
+    materialized='incremental',
+    unique_key='sk_hotel_booking_id',
+    incremental_strategy='merge',
+    on_schema_change='append_new_columns'
   )
 }}
 
@@ -14,12 +17,19 @@ with stg_fct_hotel_bookings as (
         hb.price,
         hb.breakfast_included,
         {{ dbt.datediff("hb.check_in_date", "hb.check_out_date", "day") }} as duration_nights,
-        -- Add any other relevant columns
         row_number() over (
             partition by trip_id, check_in_date
             order by check_in_date
         ) as rn
     from {{ ref('stg_hotel_bookings') }} hb
+    {% if is_incremental() %}
+    -- Only process new records since the last run
+    -- Look back 3 days to handle late-arriving data
+    where hb.check_in_date::date >= (
+        select coalesce(max(check_in_date) - interval '3 days', '1900-01-01'::date)
+        from {{ this }}
+    )
+    {% endif %}
 ),
 
 final_fct_hotel_bookings as (

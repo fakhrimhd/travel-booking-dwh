@@ -1,0 +1,139 @@
+version: 2
+
+models:
+  - name: stg_flight_bookings
+    description: "Staged flight bookings with cleaned and typed columns"
+    columns:
+      - name: trip_id
+        description: "Unique trip identifier from source"
+        tests:
+          - not_null
+      - name: flight_number
+        description: "Airline flight number"
+      - name: departure_date
+        description: "Departure date (date type)"
+      - name: departure_time
+        description: "Departure time (time type)"
+      - name: price
+        description: "Booking price"
+        tests:
+          - not_null
+      - name: travel_class
+        description: "Travel class (Economy/Business/First)"
+      - name: customer_id
+        description: "Customer foreign key"
+      - name: airline_id
+        description: "Airline foreign key"
+      - name: aircraft_id
+        description: "Aircraft foreign key"
+      - name: airport_src
+        description: "Origin airport code"
+      - name: airport_dst
+        description: "Destination airport code"
+
+  - name: stg_hotel_bookings
+    description: "Staged hotel bookings with cleaned and typed columns"
+    columns:
+      - name: trip_id
+        description: "Unique trip identifier from source"
+        tests:
+          - not_null
+      - name: customer_id
+        description: "Customer foreign key"
+        tests:
+          - not_null
+      - name: hotel_id
+        description: "Hotel foreign key"
+        tests:
+          - not_null
+      - name: check_in_date
+        description: "Check-in date"
+      - name: check_out_date
+        description: "Check-out date"
+      - name: price
+        description: "Total booking price"
+        tests:
+          - not_null
+      - name: breakfast_included
+        description: "Whether breakfast is included"
+
+  - name: stg_customers
+    description: "Staged customer data with standardized fields"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - not_null
+          - unique
+      - name: first_name
+        description: "Customer first name"
+      - name: family_name
+        description: "Customer family name"
+      - name: gender
+        description: "Customer gender"
+      - name: birthdate
+        description: "Customer date of birth"
+
+  - name: stg_airports
+    description: "Staged airport reference data"
+    columns:
+      - name: airport_id
+        description: "IATA airport code"
+        tests:
+          - not_null
+          - unique
+      - name: airport_name
+        description: "Full airport name"
+      - name: city
+        description: "Airport city"
+      - name: country
+        description: "Airport country"
+      - name: latitude
+        description: "Latitude coordinate"
+      - name: longitude
+        description: "Longitude coordinate"
+
+  - name: stg_airlines
+    description: "Staged airline reference data"
+    columns:
+      - name: airline_id
+        description: "Unique airline identifier"
+        tests:
+          - not_null
+          - unique
+      - name: airline_name
+        description: "Airline name"
+      - name: iata_code
+        description: "IATA 2-letter code"
+
+  - name: stg_aircrafts
+    description: "Staged aircraft type reference data"
+    columns:
+      - name: aircraft_id
+        description: "Unique aircraft type identifier"
+        tests:
+          - not_null
+          - unique
+      - name: aircraft_name
+        description: "Aircraft model name"
+      - name: seats
+        description: "Seat capacity"
+
+  - name: stg_hotels
+    description: "Staged hotel reference data"
+    columns:
+      - name: hotel_id
+        description: "Unique hotel identifier"
+        tests:
+          - not_null
+          - unique
+      - name: hotel_name
+        description: "Hotel name"
+      - name: hotel_address
+        description: "Street address"
+      - name: city
+        description: "Hotel city"
+      - name: country
+        description: "Hotel country"
+      - name: star_rating
+        description: "Star rating (1-5)"

@@ -1,0 +1,58 @@
+version: 2
+
+seeds:
+  - name: dim_date
+    description: "Date dimension table for analytics. Pre-populated calendar with fiscal and calendar attributes spanning 2020-2030."
+    columns:
+      - name: date_id
+        description: "Primary key (YYYYMMDD integer format)"
+        tests:
+          - not_null
+          - unique
+      - name: date_actual
+        description: "Actual date value"
+        tests:
+          - not_null
+          - unique
+      - name: day_of_week
+        description: "Day of week (1=Monday, 7=Sunday)"
+      - name: day_name
+        description: "Day name (Monday, Tuesday, etc.)"
+      - name: week_of_year
+        description: "ISO week number (1-53)"
+      - name: month_actual
+        description: "Month number (1-12)"
+      - name: month_name
+        description: "Month name (January, February, etc.)"
+      - name: month_name_abbreviated
+        description: "3-letter month abbreviation"
+      - name: quarter_actual
+        description: "Quarter number (1-4)"
+      - name: year_actual
+        description: "4-digit year"
+      - name: weekend_indr
+        description: "Weekend indicator (true/false)"
+
+  - name: dim_time
+    description: "Time dimension table for intraday analysis. Pre-populated with all times at minute granularity (1440 rows)."
+    columns:
+      - name: time_id
+        description: "Primary key (HHMM integer format)"
+        tests:
+          - not_null
+          - unique
+      - name: time_actual
+        description: "Actual time value"
+        tests:
+          - not_null
+          - unique
+      - name: hour
+        description: "Hour (0-23)"
+      - name: minute
+        description: "Minute (0-59)"
+      - name: day_night
+        description: "Day/Night classification based on hour"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Day', 'Night']

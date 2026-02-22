@@ -37,9 +37,46 @@ ELT pipeline for travel booking analytics, transforming raw flight and hotel boo
 ![Data Warehouse Schema](dwh_pactravel%20-%20marts.png)
 
 **Star Schema Design:**
-- **Fact Tables:** `fct_flight_bookings`, `fct_hotel_bookings`
+- **Fact Tables:** `fct_flight_bookings`, `fct_hotel_bookings` (incremental)
 - **Dimension Tables:** `dim_customers`, `dim_airlines`, `dim_aircrafts`, `dim_airports`, `dim_hotels`, `dim_date`, `dim_time`
 - **SCD Strategy:** Type 1 (overwrite) with deduplication
+
+### Incremental Strategy
+
+Fact tables use dbt's incremental materialization with merge strategy:
+
+```sql
+{{
+  config(
+    materialized='incremental',
+    unique_key='sk_flight_booking_id',
+    incremental_strategy='merge',
+    on_schema_change='append_new_columns'
+  )
+}}
+-- 3-day lookback handles late-arriving data
+{% if is_incremental() %}
+where departure_date >= (select max(departure_date) - interval '3 days' from {{ this }})
+{% endif %}
+```
+
+## Pipeline Orchestration
+
+![Airflow DAG](airflow-graph.png)
+
+## dbt Lineage
+
+![dbt Lineage Graph](dbt-lineage.png)
+
+The lineage graph shows data flow from sources → staging views → dimension/fact tables.
+
+**View interactive docs:**
+```bash
+cd dbt_pactravel
+source ../.venv/bin/activate
+export $(grep -v '^#' ../.env | xargs)
+dbt docs serve --port 8081
+```
 
 ## Tech Stack
 
@@ -291,11 +328,13 @@ docker network rm pactravel-network
 ## Key Features
 
 - **Airflow Orchestration:** Visual DAG with task dependencies and retry logic
+- **Incremental Models:** Fact tables use merge strategy with 3-day lookback for late-arriving data
 - **Isolated dbt Container:** Avoids Python dependency conflicts
 - **Environment-based Config:** Easy switching between local/staging/prod
 - **Surrogate Keys:** Generated via `dbt_utils.generate_surrogate_key()`
-- **Data Quality:** 55+ dbt tests (uniqueness, not_null, relationships)
+- **Data Quality:** 70+ dbt tests (uniqueness, not_null, relationships, referential integrity)
 - **Deduplication:** `row_number()` ensures clean dimensional data
+- **Full Documentation:** Column-level descriptions and lineage graph via dbt docs
 
 ## Author
 

@@ -1,6 +1,9 @@
 {{
   config(
-    unique_key='sk_flight_booking_id'
+    materialized='incremental',
+    unique_key='sk_flight_booking_id',
+    incremental_strategy='merge',
+    on_schema_change='append_new_columns'
   )
 }}
 
@@ -19,12 +22,19 @@ with stg_fct_flight_bookings as (
         fb.aircraft_id as nk_aircraft_id,
         fb.airport_src as nk_airport_src_id,
         fb.airport_dst as nk_airport_dst_id,
-        -- Add any other relevant columns
         row_number() over (
             partition by trip_id, departure_date, departure_time
             order by departure_date
         ) as rn
     from {{ ref('stg_flight_bookings') }} fb
+    {% if is_incremental() %}
+    -- Only process new records since the last run
+    -- Look back 3 days to handle late-arriving data
+    where fb.departure_date::date >= (
+        select coalesce(max(departure_date) - interval '3 days', '1900-01-01'::date)
+        from {{ this }}
+    )
+    {% endif %}
 ),
 
 final_fct_flight_bookings as (
