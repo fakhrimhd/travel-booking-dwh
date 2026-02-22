@@ -1,0 +1,5 @@
+# Python dependencies for extract/load scripts
+# Note: dbt is NOT installed here - it runs in a separate container
+pandas==2.1.4
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
