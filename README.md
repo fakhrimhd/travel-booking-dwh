@@ -1,5 +1,7 @@
 # Travel Booking Data Warehouse
 
+[![dbt CI](https://github.com/fakhrimhd/travel-booking-dwh/actions/workflows/dbt-ci.yml/badge.svg)](https://github.com/fakhrimhd/travel-booking-dwh/actions/workflows/dbt-ci.yml)
+
 ELT pipeline for travel booking analytics, transforming raw flight and hotel booking data into a star schema data warehouse, orchestrated with Apache Airflow.
 
 ## Architecture

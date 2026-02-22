@@ -1,0 +1,70 @@
+name: dbt CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-build:
+    name: dbt build + test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dwh_pactravel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: |
+          pip install --upgrade pip
+          pip install dbt-postgres==1.7.4
+
+      - name: Load source data
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d dwh_pactravel -f data/src_data/init.sql
+
+      - name: Run dbt
+        working-directory: dbt_pactravel
+        env:
+          DWH_POSTGRES_HOST: localhost
+          DWH_POSTGRES_PORT: 5432
+          DWH_POSTGRES_USER: postgres
+          DWH_POSTGRES_PASSWORD: postgres
+          DWH_POSTGRES_DB: dwh_pactravel
+        run: |
+          dbt deps
+          dbt seed
+          dbt build
+
+      - name: Generate docs
+        working-directory: dbt_pactravel
+        env:
+          DWH_POSTGRES_HOST: localhost
+          DWH_POSTGRES_PORT: 5432
+          DWH_POSTGRES_USER: postgres
+          DWH_POSTGRES_PASSWORD: postgres
+          DWH_POSTGRES_DB: dwh_pactravel
+        run: dbt docs generate
