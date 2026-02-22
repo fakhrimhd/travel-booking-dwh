@@ -1,8 +1,10 @@
 # Environment
 .env
-.env.*
 .venv/
 venv/
+
+# Keep .env.example tracked
+!.env.example
 
 # Python
 __pycache__/
@@ -13,13 +15,13 @@ __pycache__/
 # dbt
 target/
 dbt_packages/
-logs/
 dbt_pactravel/logs/
 dbt_pactravel/target/
 dbt_pactravel/dbt_packages/
 
-# Luigi
-luigi-output/
+# Airflow
+logs/airflow/
+plugins/__pycache__/
 
 # Temp files
 temp/
