@@ -3,7 +3,7 @@ version: '3'
 services:
   sources:
     image: postgres:latest
-    container_name: src-pactravel
+    container_name: pactravel-src
     restart: always
     environment:
       - POSTGRES_DB=${SRC_POSTGRES_DB}
@@ -17,7 +17,7 @@ services:
 
   dwh:
     image: postgres:latest
-    container_name: dwh-pactravel
+    container_name: pactravel-dwh
     restart: always
     environment:
       - POSTGRES_DB=${DWH_POSTGRES_DB}
