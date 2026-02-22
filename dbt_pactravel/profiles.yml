@@ -1,22 +1,25 @@
 dbt_pactravel:
   outputs:
-    ources:
-      dbname: src_pactravel
-      host: localhost
-      pass: '123456'
-      port: 5433
+    # Source database (for reference/debugging)
+    sources:
+      type: postgres
+      host: "{{ env_var('SRC_POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('SRC_POSTGRES_PORT', '5433') | as_number }}"
+      user: "{{ env_var('SRC_POSTGRES_USER', 'postgres') }}"
+      pass: "{{ env_var('SRC_POSTGRES_PASSWORD', 'postgres') }}"
+      dbname: "{{ env_var('SRC_POSTGRES_DB', 'pactravel') }}"
       schema: public
       threads: 2
-      type: postgres
-      user: postgres
 
+    # Data warehouse (main target)
     dev:
-      dbname: dwh_pactravel
-      host: localhost
-      pass: '123456'
-      port: 5434
+      type: postgres
+      host: "{{ env_var('DWH_POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('DWH_POSTGRES_PORT', '5434') | as_number }}"
+      user: "{{ env_var('DWH_POSTGRES_USER', 'postgres') }}"
+      pass: "{{ env_var('DWH_POSTGRES_PASSWORD', 'postgres') }}"
+      dbname: "{{ env_var('DWH_POSTGRES_DB', 'pactravel-dwh') }}"
       schema: public
       threads: 4
-      type: postgres
-      user: postgres
+
   target: dev
