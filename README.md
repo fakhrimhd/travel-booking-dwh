@@ -6,12 +6,12 @@ ELT pipeline for travel booking analytics, transforming raw flight and hotel boo
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Apache Airflow                                  │
-│                                                                              │
-│   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐            │
-│   │ extract  │───▶│   load   │───▶│ dbt_run  │───▶│ dbt_test │            │
-│   │ (Python) │    │ (Python) │    │ (Docker) │    │ (Docker) │            │
-│   └──────────┘    └──────────┘    └──────────┘    └──────────┘            │
+│                              Apache Airflow                                 │
+│                                                                             │
+│   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐              │
+│   │ extract  │───▶│   load   │───▶│ dbt_run  │───▶│ dbt_test │              │
+│   │ (Python) │    │ (Python) │    │ (Docker) │    │ (Docker) │              │
+│   └──────────┘    └──────────┘    └──────────┘    └──────────┘              │
 │         │               │               │               │                   │
 └─────────┼───────────────┼───────────────┼───────────────┼───────────────────┘
           │               │               │               │
@@ -338,4 +338,4 @@ docker network rm pactravel-network
 
 ## Author
 
-**Fakhri** — [GitHub](https://github.com/fakhrimhd)
+**Fakhri & his assistance** 
