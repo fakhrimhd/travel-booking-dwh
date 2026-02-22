@@ -34,7 +34,7 @@ ELT pipeline for travel booking analytics, transforming raw flight and hotel boo
 
 ## Data Model
 
-![Data Warehouse Schema](dwh_pactravel%20-%20marts.png)
+![Data Warehouse Schema](docs/images/schema-star.png)
 
 **Star Schema Design:**
 - **Fact Tables:** `fct_flight_bookings`, `fct_hotel_bookings` (incremental)
@@ -62,11 +62,11 @@ where departure_date >= (select max(departure_date) - interval '3 days' from {{ 
 
 ## Pipeline Orchestration
 
-![Airflow DAG](airflow-graph.png)
+![Airflow DAG](docs/images/airflow-graph.png)
 
 ## dbt Lineage
 
-![dbt Lineage Graph](dbt-lineage.png)
+![dbt Lineage Graph](docs/images/dbt-lineage.png)
 
 The lineage graph shows data flow from sources → staging views → dimension/fact tables.
 
