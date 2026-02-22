@@ -1,6 +1,6 @@
-# 🛫 Pactravel Data Warehouse
+# Pactravel Data Warehouse
 
-ELT pipeline for travel booking analytics — transforming raw flight and hotel booking data into a star schema data warehouse, orchestrated with Apache Airflow.
+ELT pipeline for travel booking analytics, transforming raw flight and hotel booking data into a star schema data warehouse, orchestrated with Apache Airflow.
 
 ## Architecture
 
@@ -164,19 +164,19 @@ pactravel-dwh       Up
 ## Container Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     pactravel-network                            │
-│                                                                  │
+┌────────────────────────────────────────────────────────────────┐
+│                     pactravel-network                          │
+│                                                                │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
 │  │ airflow-postgres│  │airflow-webserver│  │airflow-scheduler│ │
 │  │   (metadata)    │  │    (UI:8080)    │  │   (executor)    │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-│                                                                  │
+│                                                                │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
 │  │   dbt-runner    │  │  pactravel-src  │  │  pactravel-dwh  │ │
 │  │ (dbt commands)  │  │  (source:5433)  │  │   (DWH:5434)    │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ## Configuration
@@ -299,4 +299,4 @@ docker network rm pactravel-network
 
 ## Author
 
-**Fakhri Muhammad** — [GitHub](https://github.com/fakhrimhd) · [LinkedIn](https://linkedin.com/in/fakhrimhd)
+**Fakhri** — [GitHub](https://github.com/fakhrimhd)
