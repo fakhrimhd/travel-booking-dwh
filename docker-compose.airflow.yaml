@@ -1,0 +1,147 @@
+# Airflow services for Pactravel ELT pipeline
+# Run with: docker compose -f docker-compose.airflow.yaml up -d
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: airflow.Dockerfile
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+    AIRFLOW__WEBSERVER__SECRET_KEY: 'pactravel-secret-key-change-in-prod'
+    # Project environment variables (from .env)
+    SRC_POSTGRES_DB: ${SRC_POSTGRES_DB}
+    SRC_POSTGRES_HOST: pactravel-src
+    SRC_POSTGRES_USER: ${SRC_POSTGRES_USER}
+    SRC_POSTGRES_PASSWORD: ${SRC_POSTGRES_PASSWORD}
+    SRC_POSTGRES_PORT: 5432
+    DWH_POSTGRES_DB: ${DWH_POSTGRES_DB}
+    DWH_POSTGRES_HOST: pactravel-dwh
+    DWH_POSTGRES_USER: ${DWH_POSTGRES_USER}
+    DWH_POSTGRES_PASSWORD: ${DWH_POSTGRES_PASSWORD}
+    DWH_POSTGRES_PORT: 5432
+    DIR_TEMP_DATA: /opt/airflow/temp
+    DIR_EXTRACT_QUERY: /opt/airflow/src_query/extract
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs/airflow:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    # Mount project files needed for ELT
+    - ./extract.py:/opt/airflow/extract.py
+    - ./load.py:/opt/airflow/load.py
+    - ./utils:/opt/airflow/utils
+    - ./temp:/opt/airflow/temp
+    - ./src_query:/opt/airflow/src_query
+    - ./dbt_pactravel:/opt/airflow/dbt_pactravel
+    # Docker socket for DockerOperator
+    - /var/run/docker.sock:/var/run/docker.sock
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    airflow-postgres:
+      condition: service_healthy
+
+services:
+  # Airflow metadata database
+  airflow-postgres:
+    image: postgres:15
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # Initialize Airflow (runs once)
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password admin
+        echo "Airflow initialized!"
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+
+  # Airflow webserver (UI)
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # Airflow scheduler
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$${HOSTNAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # dbt runner container (called by Airflow via docker exec)
+  dbt-runner:
+    build:
+      context: .
+      dockerfile: dbt.Dockerfile
+    container_name: dbt-runner
+    environment:
+      DWH_POSTGRES_DB: ${DWH_POSTGRES_DB}
+      DWH_POSTGRES_HOST: pactravel-dwh
+      DWH_POSTGRES_USER: ${DWH_POSTGRES_USER}
+      DWH_POSTGRES_PASSWORD: ${DWH_POSTGRES_PASSWORD}
+      DWH_POSTGRES_PORT: 5432
+    volumes:
+      - ./dbt_pactravel:/dbt
+    working_dir: /dbt
+    # Keep container running so we can exec into it
+    command: ["tail", "-f", "/dev/null"]
+    restart: always
+
+volumes:
+  airflow-postgres-volume:
+
+networks:
+  default:
+    name: pactravel-network
+    external: true
