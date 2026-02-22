@@ -18,6 +18,7 @@ dbt_packages/
 dbt_pactravel/logs/
 dbt_pactravel/target/
 dbt_pactravel/dbt_packages/
+dbt_pactravel/.user.yml
 
 # Airflow
 logs/airflow/
